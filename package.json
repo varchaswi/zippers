@@ -1,0 +1,26 @@
+{
+  "name": "m2d",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "varchaswi",
+  "license": "ISC",
+  "dependencies": {
+    "agenda": "^2.0.2",
+    "agendash": "^0.4.0",
+    "convert-excel-to-json": "^1.6.0",
+    "dotenv": "^6.2.0",
+    "express": "^4.16.4",
+    "json2csv": "^4.3.3",
+    "jsonexport": "^2.4.1",
+    "moment": "^2.24.0",
+    "mongoose": "^5.4.11",
+    "mosca": "^2.8.3",
+    "node-adodb": "^5.0.1",
+    "winston": "^3.2.1",
+    "winston-daily-rotate-file": "^3.6.0"
+  }
+}
