@@ -1,27 +1,13 @@
 'use strict';
-//var Orders = require('../models/Order');
 var moment = require('moment');
-var jsonexport = require("jsonexport");
 const GappingOrder = require('../models/GappingOrders');
 const EventModel = require('../models/Events');
 const Tags = require('../models/Tags');
-const Json2csvParser = require('json2csv').Parser;
-const roOrderFields = ["from", "startedAt", "finishedAt", "orderID", "workerName", "issue", "damage", "machine"];
-const eventFields = ["issue", "from", "for", "at", "pcs"];
-const eventOpts = { eventFields, header: false };
-const eventParser = new Json2csvParser(eventOpts);
-const rfidFields = ["inout", "from", "for", "at", "pcs", "worker"];
-const rfidOpts = { rfidFields, header: false };
-const rfidParser = new Json2csvParser(rfidOpts);
-const roOpts = { roOrderFields, header: false, excelStrings: true };
-const roOrderparser = new Json2csvParser(roOpts);
 
 const excelToJson = require('convert-excel-to-json');
-//const client = require('../mqtt/server-client');
 
 var fs = require("fs"),
     path = require('path');
-//  path.join(__dirname, '../inputs/TODAY.xlsx');
 const filePath = '../inputs/TODAY.xlsx';
 const gappingOrdersfile = '../inputs/GAPPING_ORDERS.xlsx';
 const { roleopenLogger, ordersLogger, diagnosticsLogger, redLogger, blueLogger, greenLogger, whiteLogger } = require('../outputs/output');
@@ -84,12 +70,12 @@ module.exports = {
                         }
                     })
                 } else {
-                    client.publish("UIerror", "No green orders");
+                client.publish("UIerror", "No green orders");
                 }
             }
         });
     },
-    pickup_gapping_orders: function (client) {
+    update_gapping_orders: function (client) {
         if (!fs.existsSync(gappingOrdersfile)) {
             client.publish("UIerror", "no file");
             return
@@ -120,5 +106,46 @@ module.exports = {
                 })
             }, 5 * index)
         });
+    },
+    setExcellOrders: function (client) {
+
+        fs.access(filePath, fs.F_OK, (err) => {
+            if (err) {
+                console.error(err)
+                client.publish("errors", "no such file")
+                return
+            }
+            const result = excelToJson({
+                sourceFile: filePath,
+                header: {
+                    rows: 1
+                },
+                columnToKey: {
+                    A: 'sl.no',
+                    B: 'orderId',
+                    C: 'orderSize',
+                    D: 'color',
+                    E: 'pcsRequired',
+                    F: 'pcsSize'
+                },
+                range: 'B2:F*'
+            });
+            result.Sheet1.forEach(element => {
+                var order = new GappingOrder(element);
+                order.save(function (err) {
+                    if (err) {
+                        if (err.code === 11000) {
+                            return client.publish('errors', 'order exists');
+                        }
+                        else {
+                            return client.publish('errors', err.message)
+                        }
+                    }
+                    else {
+                        return client.publish('success', 'order success');
+                    }
+                });
+            });
+        })
     }
 }

@@ -1,13 +1,13 @@
 var mosca = require('mosca');
 var settings = {
 	port: 1883,
+
 	http: {
-		port: 8080,
+		port: 8000,
 		bundle: true,
 		static: './'
 	}
 }
-
 
 var server = new mosca.Server(settings);
 

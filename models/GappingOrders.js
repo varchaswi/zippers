@@ -1,28 +1,42 @@
 const mongoose = require('mongoose');
-const moment = require("moment")
+const moment = require("moment");
+const CounterModel = require('./counter');
 Schema = mongoose.Schema;
-
-const GappingOrderSchema = new Schema({
-    orderId:{type:String,unique:true, required : true},
-    time:{ 
-        type:Number,required:true
+var GappingOrderSchema = new Schema({
+    orderId: { type: String, unique: true, required: true },
+    machine: { type: String },
+    rodamage: { type: Number },
+    time: {
+        type: Number
     },
-    pcs:{type:Number,default:0},
-    machine:{type:String},
-    status:{type: String, enum: ['DONE','IN PROGRESS','OPEN','HOLD'],default:'OPEN' },
-    completed: {type :Boolean,default:false},
+    orderSize:{type:Number},
+    color: { type: String },
+    prevState: { type: String },
+    pcs: { type: Number, default: 0 },
+    pcsSize: { type: Number },
+    pcsRequired: { type: Number },
+    status: { type: String, enum: ['GAPPING', 'IN PROGRESS', 'OPEN', 'HOLD', 'DONE'], default: 'OPEN' },
+    completed: { type: Boolean, default: false },
     updated_at: { type: Date, default: Date.now },
+    seqNo: { type: Number}
 });
 
-const GappingOrderModel = mongoose.model('GappingOrder' , GappingOrderSchema)
-module.exports = GappingOrderModel;
- 
-function slugify(text)
-{
-  return text.toString().toLowerCase()
-    .replace(/\s+/g, '-')           // Replace spaces with -
-    .replace(/[^\w\-]+/g, '')       // Remove all non-word chars
-    .replace(/\-\-+/g, '-')         // Replace multiple - with single -
-    .replace(/^-+/, '')             // Trim - from start of text
-    .replace(/-+$/, '');            // Trim - from end of text
-}
+GappingOrderSchema.pre('save', function (next) {
+    var doc = this;
+    console.log("freaking hai");
+    CounterModel.findByIdAndUpdate(
+        { _id: 'orders' }, { $inc: { seq: 1 } }, function (error, counter) {
+        if (error) {
+            console.error(error.stack);
+            return next(error);
+        }else{
+            console.log({counter:counter});
+        doc.seqNo = counter.seq;
+        doc.time = new Date().getTime();
+        next();}
+    });
+});
+
+
+module.exports  = mongoose.model('GappingOrder', GappingOrderSchema)
+

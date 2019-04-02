@@ -4,6 +4,7 @@ const
 
 module.exports = {
     update_rfid: function (client) {
+        client.publish("log","called");
         connection
             .query('SELECT * FROM tags')
             .then(data => {

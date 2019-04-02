@@ -2,6 +2,9 @@ var mqtt = require('mqtt');
 var gappingController = require("../controllers/GappingMachine");
 var excellController = require("../controllers/excellController");
 var settingsController = require("../controllers/settingsController");
+var counterController = require("../controllers/counterController");
+var tagsController = require("../controllers/tagsController");
+var roeventsController = require("../controllers/roeventsController");
 var Topic = '#'; //subscribe to all topics
 var Broker_URL = 'mqtt://localhost';
 //var Database_URL = '192.168.1.123';
@@ -48,13 +51,38 @@ function after_publish() {
 
 function mqtt_messsageReceived(topic, message, packet) {
     var message_str = message.toString(); //convert byte array to string
-    message_str = message_str.replace(/\n$/, ''); //remove new line
+    message_str = message_str.replace(/\n$/, ''); //remove new linetop
+    if(topic === "setorders"){
+        excellController.setExcellOrders(client);
+    }
+    if (topic === 'rollopen/rfid') {
+        client.publish('web/rollopen/rfid', message.toString());
+        tagsController.getWorker(message.toString(), client);
+    }
+    if(topic === 'rollopen/nextOrder'){
+        gappingController.get_ro_next(client,message_str);
+    }
+    if(topic === "rollopen/joint"){
+        roeventsController.addEvent(message_str,"JOINT",client)
+    }
+    if(topic === "rollopen/rollStart"){
+        roeventsController.addEvent(message_str,"ROLL START",client)
+    }
+    if(topic === "rollopen/rollEnd"){
+        roeventsController.addEvent(message_str,"ROLL END",client)
+    }
+    if(topic === "rollopen/finishrollopen"){
+        roeventsController.updateROMqttOrder(message_str);
+    }
+    if(topic === 'counter'){
+        counterController.setCounter(message_str);
+    }
     if(topic === "pcs"){
         json = JSON.parse(message_str)
         gappingController.pcs_count(json.machine);
     }
     if(topic === "gappingOrders"){
-        excellController.pickup_gapping_orders(client);
+        excellController.update_gapping_orders(client);
     }
     if(topic === "gappingNext"){
         gappingController.set_next(client,message_str);

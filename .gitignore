@@ -1,3 +1,4 @@
 node_modules
 daemon
 /node_modules
+our-install.js
