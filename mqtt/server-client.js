@@ -57,10 +57,12 @@ function mqtt_messsageReceived(topic, message, packet) {
     }
     if (topic === 'rollopen/rfid') {
         client.publish('web/rollopen/rfid', message.toString());
-        tagsController.getWorker(message.toString(), client);
+        tagsController.getWorker(message_str, client);
     }
     if(topic === 'rollopen/nextOrder'){
         gappingController.get_ro_next(client,message_str);
+    }if(topic === 'rollopen/setHold'){
+        roeventsController.addHold(message_str);
     }
     if(topic === "rollopen/joint"){
         roeventsController.addEvent(message_str,"JOINT",client)

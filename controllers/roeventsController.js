@@ -84,33 +84,35 @@ module.exports = {
 
     },
 
-    addHold: function (body, stage, issue, machine) {
+    addHold: function (body) {
         var data = JSON.parse(body);
-        var roStage = stage;
         var json = {};
         json.rollNo = data.rollNo;
         json.joint = data.joint;
-        data.machine = machine;
-        data.createdOn = moment();
-        Order.updateOne({ orderID: data.orderID },
-            {
-                $set: {
-                    state: stage,
-                    prevState: JSON.stringify(json)
+            GappingOrder.findOneAndUpdate({ orderId: data.orderID },
+                {
+                        status: 'HOLD',
+                        prevState: JSON.stringify(json),
+                       // time: new Date().getTime()
+                }, {new:true},function (err,doc) {
+                    if (err) {
+                        console.error(err.message);
+                    }
+                });
+                data.issue = 'HOLD';
+                let csv = '';
+                try {
+                    csv = "";
+                    csv += data.orderID + ",";
+                    csv += data.issue + ",";
+                    csv += data.rollNo + ",";
+                    csv += data.joint + ","
+                    csv += data.workerName
+                    roleopenLogger.info(csv);
+                } catch (err) {
+                    console.error(err);
                 }
-            }, function (err) {
-                console.log(err);
-            });
-        data.orderStage = roStage;
-        data.issue = issue;
-        let csv = '';
-        try {
-            data.createdOn = moment().format('DD-MM-YYYY HH:mm:ss');
-            csv = parser.parse(data);
-            roleopenLogger.info(csv);
-        } catch (err) {
-            console.error(err);
-        }
+        
 
     },
     updateROMqttOrder: function (data) {
